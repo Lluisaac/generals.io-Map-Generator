@@ -2,36 +2,35 @@ package renderer;
 
 import org.newdawn.slick.Graphics;
 
+import main.Main;
+
 public class Camera
 {
-
 	private static final float ZOOM_SPEED = 0.1f;
-
-	private static final float STANDARD_CAMERA_SPEED = 0.6f;
 
 	private float offsetX;
 	private float offsetY;
 
-	private int horizontalSpeedMultiplicator;
-	private int verticalSpeedMultiplicator;
-
 	private float zoomMultiplicator;
+
+	private boolean moving;
 
 	public Camera()
 	{
 		this.center();
+
+		this.zoomMultiplicator = 1;
 	}
 
 	public void update(int delta)
 	{
-		this.offsetXBy(((Camera.STANDARD_CAMERA_SPEED * this.horizontalSpeedMultiplicator) / this.zoomMultiplicator) * delta);
-		this.offsetYBy(((Camera.STANDARD_CAMERA_SPEED * this.verticalSpeedMultiplicator) / this.zoomMultiplicator) * delta);
+		
 	}
 
 	public void render(Graphics g)
 	{
 		g.scale(this.zoomMultiplicator, this.zoomMultiplicator);
-		g.translate(this.offsetX, this.offsetY);
+		g.translate(this.offsetX / this.zoomMultiplicator, this.offsetY / this.zoomMultiplicator);
 		g.flush();
 	}
 
@@ -43,56 +42,6 @@ public class Camera
 	private void offsetYBy(float i)
 	{
 		this.offsetY += i;
-	}
-
-	private void changeHorizontalSpeed(int i)
-	{
-		this.horizontalSpeedMultiplicator += i;
-	}
-
-	private void changeVerticalSpeed(int i)
-	{
-		this.verticalSpeedMultiplicator += i;
-	}
-
-	public void movingUp()
-	{
-		this.changeVerticalSpeed(1);
-	}
-
-	public void movingDown()
-	{
-		this.changeVerticalSpeed(-1);
-	}
-
-	public void movingLeft()
-	{
-		this.changeHorizontalSpeed(1);
-	}
-
-	public void movingRight()
-	{
-		this.changeHorizontalSpeed(-1);
-	}
-
-	public void stopMovingUp()
-	{
-		this.changeVerticalSpeed(-1);
-	}
-
-	public void stopMovingDown()
-	{
-		this.changeVerticalSpeed(1);
-	}
-
-	public void stopMovingLeft()
-	{
-		this.changeHorizontalSpeed(-1);
-	}
-
-	public void stopMovingRight()
-	{
-		this.changeHorizontalSpeed(1);
 	}
 
 	public float getOffsetX()
@@ -114,14 +63,9 @@ public class Camera
 	{
 		this.zoomMultiplicator += Camera.ZOOM_SPEED;
 
-		if(this.zoomMultiplicator > 5)
+		if(this.zoomMultiplicator > 8)
 		{
-			this.zoomMultiplicator = 5;
-		}
-		else
-		{
-			this.offsetX -= this.getZoomingOffset(1920);
-			this.offsetY -= this.getZoomingOffset(1080);
+			this.zoomMultiplicator = 8;
 		}
 	}
 
@@ -133,37 +77,30 @@ public class Camera
 		{
 			this.zoomMultiplicator = 0.2f;
 		}
-		else
-		{
-			this.offsetX += this.getUnzoomingOffset(1920);
-			this.offsetY += this.getUnzoomingOffset(1080);
-		}
 	}
 
 	public void center()
 	{
-		this.offsetX = 0;
-		this.offsetY = 0;
-
-		this.horizontalSpeedMultiplicator = 0;
-		this.verticalSpeedMultiplicator = 0;
-
-		this.zoomMultiplicator = 1;
+		this.offsetX = Main.SCREEN_WIDTH / 2;
+		this.offsetY = Main.SCREEN_HEIGHT / 2;
 	}
 
-	private float getZoomingOffset(int value)
+	public void startMoving()
 	{
-		float actualValue = value - (value / this.zoomMultiplicator);
-		float previousValue = value - (value / (this.zoomMultiplicator - Camera.ZOOM_SPEED));
-
-		return (actualValue - previousValue) / 2;
+		this.moving = true;
 	}
 
-	private float getUnzoomingOffset(int value)
+	public void stopMoving()
 	{
-		float previousValue = value - (value / (this.zoomMultiplicator + Camera.ZOOM_SPEED));
-		float actualValue = value - (value / this.zoomMultiplicator);
+		this.moving = false;
+	}
 
-		return (previousValue - actualValue) / 2;
+	public void mouseMoved(int oldX, int oldY, int newX, int newY)
+	{
+		if (this.moving)
+		{
+			this.offsetXBy(newX - oldX);
+			this.offsetYBy(newY - oldY);
+		}
 	}
 }

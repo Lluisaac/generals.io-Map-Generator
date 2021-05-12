@@ -26,21 +26,24 @@ public class Renderer
 	public void render(Graphics g, Map map) throws SlickException
 	{
 		this.cam.render(g);
-		this.renderMap(g, map.getMap());
+		this.renderMap(g, map);
 	}
 
-	private void renderMap(Graphics g, Case[][] map) throws SlickException
+	private void renderMap(Graphics g, Map map) throws SlickException
 	{
-		for(int i = 0; i < map.length; i++)
+		float centerOffsetX = (Renderer.SQUARE_SIZE + Renderer.SEPARATION) * (map.getWidth() / 2);
+		float centerOffsetY = (Renderer.SQUARE_SIZE + Renderer.SEPARATION) * (map.getHeight() / 2);
+		
+		for(int i = 0; i < map.getWidth(); i++)
 		{
-			for(int j = 0; j < map[i].length; j++)
+			for(int j = 0; j < map.getHeight(); j++)
 			{
-				Case maCase = map[i][j];
+				Case maCase = map.getMap()[i][j];
 				
 				g.setColor(maCase.getColor());
 
-				int squarePositionX = (i * Renderer.SQUARE_SIZE) + (Renderer.SEPARATION * i);
-				int squarePositionY = (j * Renderer.SQUARE_SIZE) + (Renderer.SEPARATION * j);
+				float squarePositionX = (i * Renderer.SQUARE_SIZE) + (Renderer.SEPARATION * i) - centerOffsetX;
+				float squarePositionY = (j * Renderer.SQUARE_SIZE) + (Renderer.SEPARATION * j) - centerOffsetY;
 
 				g.fillRect(squarePositionX, squarePositionY, Renderer.SQUARE_SIZE, Renderer.SQUARE_SIZE);
 

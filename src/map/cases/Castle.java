@@ -2,26 +2,13 @@ package map.cases;
 
 import org.newdawn.slick.Color;
 
-public class Castle implements Case
+public class Castle extends Case
 {
 	private int cost;
-	private Color col;
 	
-	public Castle(int castleCost)
+	public Castle(int x, int y, int castleCost)
 	{
+		super(CaseType.CASTLE, new Color(128, 128, 128), x, y);
 		this.cost = castleCost;
-		this.col = new Color(128, 128, 128);
-	}
-
-	@Override
-	public String getName()
-	{
-		return "castle";
-	}
-
-	@Override
-	public Color getColor()
-	{
-		return this.col;
 	}
 }

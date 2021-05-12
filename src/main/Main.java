@@ -10,7 +10,6 @@ import org.newdawn.slick.MouseListener;
 import org.newdawn.slick.SlickException;
 
 import map.Map;
-import renderer.Camera;
 import renderer.Renderer;
 
 public class Main extends BasicGame
@@ -32,7 +31,7 @@ public class Main extends BasicGame
 	@Override
 	public void init(GameContainer container) throws SlickException
 	{
-		this.map = new Map(2, 20, 20, 0.5, 0.5);
+		this.map = new Map(2, 20, 20, 1, 0.5);
 
 		container.getInput().addMouseListener(new MouseListener() {
 
@@ -73,25 +72,35 @@ public class Main extends BasicGame
 			@Override
 			public void mouseReleased(int button, int x, int y)
 			{
-				if(button == Input.MOUSE_LEFT_BUTTON)
+				if(button == Input.MOUSE_RIGHT_BUTTON)
 				{
 					Main.this.map.reroll();
+				}
+				else if(button == Input.MOUSE_LEFT_BUTTON)
+				{
+					Main.this.renderer.getCamera().stopMoving();
 				}
 			}
 
 			@Override
-			public void mousePressed(int arg0, int arg1, int arg2)
+			public void mousePressed(int button, int x, int y)
 			{
+				if(button == Input.MOUSE_LEFT_BUTTON)
+				{
+					Main.this.renderer.getCamera().startMoving();
+				}
 			}
 
 			@Override
-			public void mouseMoved(int arg0, int arg1, int arg2, int arg3)
+			public void mouseMoved(int oldX, int oldY, int newX, int newY)
 			{
+				
 			}
 
 			@Override
-			public void mouseDragged(int arg0, int arg1, int arg2, int arg3)
+			public void mouseDragged(int oldX, int oldY, int newX, int newY)
 			{
+				Main.this.renderer.getCamera().mouseMoved(oldX, oldY, newX, newY);
 			}
 
 			@Override
@@ -126,54 +135,18 @@ public class Main extends BasicGame
 			@Override
 			public void keyReleased(int key, char c)
 			{
-				Camera cam = Main.this.renderer.getCamera();
-
-				switch(key)
-				{
-					case Input.KEY_W:
-					case Input.KEY_UP:
-						cam.stopMovingUp();
-						break;
-					case Input.KEY_S:
-					case Input.KEY_DOWN:
-						cam.stopMovingDown();
-						break;
-					case Input.KEY_A:
-					case Input.KEY_LEFT:
-						cam.stopMovingLeft();
-						break;
-					case Input.KEY_D:
-					case Input.KEY_RIGHT:
-						cam.stopMovingRight();
-						break;
-				}
 			}
 
 			@Override
 			public void keyPressed(int key, char c)
 			{
-				Camera cam = Main.this.renderer.getCamera();
-
 				switch(key)
 				{
-					case Input.KEY_W:
-					case Input.KEY_UP:
-						cam.movingUp();
-						break;
-					case Input.KEY_S:
-					case Input.KEY_DOWN:
-						cam.movingDown();
-						break;
-					case Input.KEY_A:
-					case Input.KEY_LEFT:
-						cam.movingLeft();
-						break;
-					case Input.KEY_D:
-					case Input.KEY_RIGHT:
-						cam.movingRight();
-						break;
 					case Input.KEY_ESCAPE:
 						container.exit();
+						break;
+					case Input.KEY_C:
+						Main.this.renderer.getCamera().center();
 						break;
 				}
 			}
@@ -194,6 +167,6 @@ public class Main extends BasicGame
 
 	public static void main(String[] args) throws SlickException
 	{
-		new AppGameContainer(new Main(), 1920, 1080, false).start();
+		new AppGameContainer(new Main(), Main.SCREEN_WIDTH, Main.SCREEN_HEIGHT, false).start();
 	}
 }
