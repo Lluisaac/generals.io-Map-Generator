@@ -319,7 +319,7 @@ public class Map
 			
 			for (Tile adj : act.getAdjacent())
 			{
-				if (adj.getType().isStrongConnexity() && !zone.contains(adj) && !aFaire.contains(adj))
+				if (adj.getType().isWeakConnexity() && !zone.contains(adj) && !aFaire.contains(adj))
 				{
 					aFaire.add(adj);
 				}
