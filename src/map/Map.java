@@ -12,7 +12,8 @@ import map.cases.Mountain;
 
 public class Map
 {
-	private static final float MOUNTAIN_PROBABILITY_RATIO = 11f;
+	private static final double HALF = 0.5;
+	private static final double TWO_PI = 2 * Math.PI;
 	private static final double SURFACE_RATIO_THRESHOLD = 0.9d;
 	private static final int MINIMUM_SPAWN_DISTANCE = 6;
 
@@ -20,39 +21,43 @@ public class Map
 
 	private int nbPlayers;
 
-	private int width;
-	private int height;
+	private double widthSetting;
+	private double heightSetting;
 	private double mountainSetting;
 	private double castleSetting;
+	
+	private int width;
+	private int height;
 	
 	private List<Case> spawns;
 
 	private Random rand;
+	
+	//All the magic numbers in this class are arbitrary values that were decided to be a good match. 
+	//They come from the data collection that was done.
 
-	public Map(int nbPlayers, int width, int height, double mountainSetting, double castleSetting)
+	public Map(int nbPlayers, double widthSetting, double heightSetting, double mountainSetting, double castleSetting)
 	{
 		this.nbPlayers = nbPlayers;
 
-		this.width = width;
-		this.height = height;
+		this.widthSetting = widthSetting;
+		this.heightSetting = heightSetting;
 		this.mountainSetting = mountainSetting;
 		this.castleSetting = castleSetting;
 		
 		this.spawns = new ArrayList<>();
-
-		this.map = new Case[this.width][this.height];
 		this.rand = new Random();
 		this.reroll();
 	}
 
 	public int getWidth()
 	{
-		return this.width;
+		return width;
 	}
 
 	public int getHeight()
 	{
-		return this.height;
+		return height;
 	}
 
 	public void reroll()
@@ -80,14 +85,65 @@ public class Map
 	{
 		this.spawns.clear();
 		
-		buildBlanks();
-		linkCases();
+		this.generateMapSize();
 		
-		int nbVides = this.buildMountains();
-		nbVides = this.buildCastles(nbVides);
+		this.buildMountains();
+		
+		this.buildCastles();
+		
 		Case spawn = this.buildSpawns();
 		
 		return this.verifyIntegrity(spawn);
+	}
+
+	private void generateMapSize()
+	{
+		this.width = this.generateSize(this.widthSetting);
+		this.height = this.generateSize(this.heightSetting);
+
+		this.width = this.width < 16 ? 16 : this.width;
+		this.height = this.height < 16 ? 16 : this.height;
+		
+		System.out.println("Width: " + this.width + "\nHeight: " + this.height);
+		
+		this.map = new Case[this.width][this.height];
+		
+		buildBlanks();
+		
+		linkCases();
+	}
+
+	private int generateSize(double setting)
+	{
+		int expected = this.getExpectedSize(setting);
+		double variance = this.getSizeVariance();
+		
+		double actualSize = this.gaussian(expected, variance);
+		
+		return (int) Math.round(actualSize);
+	}
+
+	private int getExpectedSize(double setting)
+	{
+		double first;
+		
+		if (setting <= HALF)
+		{
+			first = setting * 44;
+		}
+		else
+		{
+			first = 22 + (setting - HALF) * 164;
+		}
+		
+		double second = 240 / (nbPlayers * 1.0) + 40;
+		
+		return (int) Math.round(Math.sqrt((first + second) * this.nbPlayers));
+	}
+
+	private double getSizeVariance()
+	{
+		return 1.35 + (this.nbPlayers * 0.15);
 	}
 
 	private void buildBlanks()
@@ -130,11 +186,11 @@ public class Map
 		}
 	}
 
-	private int buildMountains()
+	private void buildMountains()
 	{
-		int cpt = 0;
-
 		double proba = this.getMountainProbability();
+		
+		int cpt = 0;
 
 		for(int i = 0; i < this.width; i++)
 		{
@@ -143,53 +199,68 @@ public class Map
 				if(this.rand.nextDouble() <= proba)
 				{
 					this.insert(i, j, new Mountain(i, j));
-				}
-				else
-				{
 					cpt++;
 				}
 
 			}
 		}
-
-		return cpt;
+		
+		System.out.println("Mountain proportion: " + cpt / (this.width * this.height * 1.0));
 	}
 
 	private double getMountainProbability()
 	{
-		double setting = this.mountainSetting > 1 ? 1 : this.mountainSetting < 0 ? 0 : this.mountainSetting;
-		return Math.sqrt(setting / MOUNTAIN_PROBABILITY_RATIO);
+		if (this.mountainSetting <= HALF)
+		{
+			return 0.42 * this.mountainSetting;
+		}
+		else
+		{
+			return 0.21 + (0.18 * (this.mountainSetting - HALF));
+		}
 	}
 
-	private int buildCastles(int nbVides)
+	private void buildCastles()
 	{
-		double proba = this.getCastleProbability(nbVides);
+		int expected = this.getExpectedCastleAmount();
+		double variance = this.getCastleAmountVariance();
 		
-		int cpt = 0;
+		int actualAmount = (int) Math.round(this.gaussian(expected, variance));
+		
+		System.out.println("Number of Castles: " + actualAmount);
+		
+		this.insertCastles(actualAmount);
+	}
+	
+	private int getExpectedCastleAmount()
+	{
+		double territoryPerCastle = 16 / castleSetting;
+		int totalTerritory = this.width * this.height;
+		return (int) Math.round(totalTerritory / territoryPerCastle);
+	}
 
-		for(int i = 0; i < this.width; i++)
+	private double getCastleAmountVariance()
+	{
+		double sizeSetting = (this.widthSetting + this.heightSetting) / 2.0;
+		return sizeSetting * this.nbPlayers * 0.583;
+	}
+
+	private void insertCastles(int n)
+	{
+		int nbCastles = 0;
+		
+		while (nbCastles < n)
 		{
-			for(int j = 0; j < this.height; j++)
+			int x = this.rand.nextInt(this.width);
+			int y = this.rand.nextInt(this.height);
+			
+			if (this.map[x][y].getType() == CaseType.BLANK)
 			{
-				if(this.map[i][j].getType() != CaseType.MOUNTAIN)
-				{
-					if(this.rand.nextDouble() <= proba)
-					{
-						this.insert(i, j, new Castle(i, j, this.getCastleCost()));
-						nbVides--;
-						cpt ++;
-					}
-				}
-
+				this.insert(x, y, new Castle(x, y, this.getCastleCost()));
+				
+				nbCastles++;
 			}
 		}
-
-		return nbVides;
-	}
-
-	private double getCastleProbability(int nbVides)
-	{
-		return (10d * this.castleSetting * this.nbPlayers) / (nbVides * 1.0d);
 	}
 
 	private int getCastleCost()
@@ -361,5 +432,21 @@ public class Map
 	public Case[][] getMap()
 	{
 		return this.map;
+	}
+	
+	/*
+	 * From https://en.wikipedia.org/wiki/Box–Muller_transform#Implementation
+	 */
+	private double gaussian(double expected, double variance)
+	{
+		double u1 = this.rand.nextDouble();
+		double u2 = this.rand.nextDouble();
+		
+		double stdDev = Math.sqrt(Math.sqrt(variance));
+		double mag = stdDev / Math.sqrt(-2 * Math.log(u1));
+		
+		double result = mag * Math.cos(TWO_PI * u2) + expected;
+		
+		return result;
 	}
 }
