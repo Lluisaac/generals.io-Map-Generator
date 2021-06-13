@@ -1,4 +1,4 @@
-package map.cases;
+package map.tiles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,22 +7,22 @@ import org.newdawn.slick.Color;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SlickException;
 
-public class Case
+public class Tile
 {
-	private CaseType type;
+	private TileType type;
 	private Color col;
 	
 	public final int x;
 	public final int y;
 	
-	private List<Case> adjacent;
+	private List<Tile> adjacent;
 	
-	public Case(int x, int y)
+	public Tile(int x, int y)
 	{
-		this(CaseType.BLANK, new Color(255, 255, 255), x, y);
+		this(TileType.BLANK, new Color(255, 255, 255), x, y);
 	}
 	
-	protected Case(CaseType type, Color color, int x, int y)
+	protected Tile(TileType type, Color color, int x, int y)
 	{
 		this.type = type;
 		this.col = color;
@@ -48,17 +48,17 @@ public class Case
 		return this.col;
 	}
 	
-	public CaseType getType()
+	public TileType getType()
 	{
 		return this.type;
 	}
 	
-	public List<Case> getAdjacent()
+	public List<Tile> getAdjacent()
 	{
 		return this.adjacent;
 	}
 	
-	public void addAdjacent(Case adj)
+	public void addAdjacent(Tile adj)
 	{
 		this.adjacent.add(adj);
 	}
@@ -68,17 +68,17 @@ public class Case
 		this.adjacent.clear();
 	}
 
-	public void switchAdjacent(Case oldCase, Case newCase)
+	public void switchAdjacent(Tile oldCase, Tile newCase)
 	{
 		this.adjacent.remove(oldCase);
 		this.addAdjacent(newCase);
 	}
 
-	public void addAdjacentOf(Case oldCase)
+	public void addAdjacentOf(Tile oldCase)
 	{
 		this.emptyAdjacent();
 		
-		for (Case adj : oldCase.getAdjacent())
+		for (Tile adj : oldCase.getAdjacent())
 		{
 			this.addAdjacent(adj);
 		}

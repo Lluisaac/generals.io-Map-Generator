@@ -1,16 +1,16 @@
-package map.cases;
+package map.tiles;
 
-public enum CaseType
+public enum TileType
 {
 	BLANK(true, true),
 	MOUNTAIN(false, false),
-	CASTLE(true, false),
-	KING(true, true);
+	CITY(true, false),
+	GENERAL(true, true);
 
 	private boolean isStrongConnexity;
 	private boolean isWeakConnexity;
 	
-	private CaseType(boolean isStrong, boolean isWeak)
+	private TileType(boolean isStrong, boolean isWeak)
 	{
 		this.isStrongConnexity = isStrong;
 		this.isWeakConnexity = isWeak;

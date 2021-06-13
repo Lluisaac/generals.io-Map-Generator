@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import map.cases.Case;
-import map.cases.CaseType;
-import map.cases.Castle;
-import map.cases.King;
-import map.cases.Mountain;
+import map.tiles.City;
+import map.tiles.General;
+import map.tiles.Mountain;
+import map.tiles.Tile;
+import map.tiles.TileType;
 
 public class Map
 {
@@ -17,33 +17,33 @@ public class Map
 	private static final double SURFACE_RATIO_THRESHOLD = 0.9d;
 	private static final int MINIMUM_SPAWN_DISTANCE = 6;
 
-	private Case[][] map;
+	private Tile[][] map;
 
 	private int nbPlayers;
 
 	private double widthSetting;
 	private double heightSetting;
 	private double mountainSetting;
-	private double castleSetting;
+	private double citySetting;
 	
 	private int width;
 	private int height;
 	
-	private List<Case> spawns;
+	private List<Tile> spawns;
 
 	private Random rand;
 	
 	//All the magic numbers in this class are arbitrary values that were decided to be a good match. 
 	//They come from the data collection that was done.
 
-	public Map(int nbPlayers, double widthSetting, double heightSetting, double mountainSetting, double castleSetting)
+	public Map(int nbPlayers, double widthSetting, double heightSetting, double mountainSetting, double citySetting)
 	{
 		this.nbPlayers = nbPlayers;
 
 		this.widthSetting = widthSetting;
 		this.heightSetting = heightSetting;
 		this.mountainSetting = mountainSetting;
-		this.castleSetting = castleSetting;
+		this.citySetting = citySetting;
 		
 		this.spawns = new ArrayList<>();
 		this.rand = new Random();
@@ -65,15 +65,15 @@ public class Map
 		while (!this.generate());
 	}
 	
-	public Case insert(int x, int y, Case newCase)
+	public Tile insert(int x, int y, Tile newCase)
 	{
-		Case oldCase = this.map[x][y];
+		Tile oldCase = this.map[x][y];
 		
 		this.map[x][y] = newCase;
 		
 		newCase.addAdjacentOf(oldCase);
 		
-		for (Case adj : newCase.getAdjacent())
+		for (Tile adj : newCase.getAdjacent())
 		{
 			adj.switchAdjacent(oldCase, newCase);		
 		}
@@ -89,9 +89,9 @@ public class Map
 		
 		this.buildMountains();
 		
-		this.buildCastles();
+		this.buildCities();
 		
-		Case spawn = this.buildSpawns();
+		Tile spawn = this.buildSpawns();
 		
 		return this.verifyIntegrity(spawn);
 	}
@@ -106,7 +106,7 @@ public class Map
 		
 		System.out.println("Width: " + this.width + "\nHeight: " + this.height);
 		
-		this.map = new Case[this.width][this.height];
+		this.map = new Tile[this.width][this.height];
 		
 		buildBlanks();
 		
@@ -152,7 +152,7 @@ public class Map
 		{
 			for(int j = 0; j < this.height; j++)
 			{
-				this.map[i][j] = new Case(i, j);
+				this.map[i][j] = new Tile(i, j);
 			}
 		}
 	}
@@ -220,68 +220,68 @@ public class Map
 		}
 	}
 
-	private void buildCastles()
+	private void buildCities()
 	{
-		int expected = this.getExpectedCastleAmount();
-		double variance = this.getCastleAmountVariance();
+		int expected = this.getExpectedCityAmount();
+		double variance = this.getCityAmountVariance();
 		
 		int actualAmount = (int) Math.round(this.gaussian(expected, variance));
 		
-		System.out.println("Number of Castles: " + actualAmount);
+		System.out.println("Number of Cities: " + actualAmount);
 		
-		this.insertCastles(actualAmount);
+		this.insertCities(actualAmount);
 	}
 	
-	private int getExpectedCastleAmount()
+	private int getExpectedCityAmount()
 	{
-		double territoryPerCastle = 16 / castleSetting;
+		double territoryPerCity = 16 / citySetting;
 		int totalTerritory = this.width * this.height;
-		return (int) Math.round(totalTerritory / territoryPerCastle);
+		return (int) Math.round(totalTerritory / territoryPerCity);
 	}
 
-	private double getCastleAmountVariance()
+	private double getCityAmountVariance()
 	{
 		double sizeSetting = (this.widthSetting + this.heightSetting) / 2.0;
 		return sizeSetting * this.nbPlayers * 0.583;
 	}
 
-	private void insertCastles(int n)
+	private void insertCities(int n)
 	{
-		int nbCastles = 0;
+		int nbCities = 0;
 		
-		while (nbCastles < n)
+		while (nbCities < n)
 		{
 			int x = this.rand.nextInt(this.width);
 			int y = this.rand.nextInt(this.height);
 			
-			if (this.map[x][y].getType() == CaseType.BLANK)
+			if (this.map[x][y].getType() == TileType.BLANK)
 			{
-				this.insert(x, y, new Castle(x, y, this.getCastleCost()));
+				this.insert(x, y, new City(x, y, this.getCityCost()));
 				
-				nbCastles++;
+				nbCities++;
 			}
 		}
 	}
 
-	private int getCastleCost()
+	private int getCityCost()
 	{
 		return this.rand.nextInt(11) + 40;
 	}
 
-	private Case buildSpawns()
+	private Tile buildSpawns()
 	{
 		int nbPlayersSet = 0;
 		
-		King newCase = null;
+		General newCase = null;
 		
 		while (nbPlayersSet < this.nbPlayers)
 		{
 			int x = this.rand.nextInt(this.width);
 			int y = this.rand.nextInt(this.height);
 			
-			if (this.map[x][y].getType() == CaseType.BLANK)
+			if (this.map[x][y].getType() == TileType.BLANK)
 			{
-				newCase = new King(x, y);
+				newCase = new General(x, y);
 				this.insert(x, y, newCase);
 				
 				this.spawns.add(newCase);
@@ -293,9 +293,9 @@ public class Map
 		return newCase;
 	}
 
-	private boolean verifyIntegrity(Case spawn)
+	private boolean verifyIntegrity(Tile spawn)
 	{
-		List<Case> zoneConnexe = this.getZoneConnexe(spawn);
+		List<Tile> zoneConnexe = this.getZoneConnexe(spawn);
 		
 		boolean spawnsConnexe = this.verifySpawnsConnexes(zoneConnexe);
 		boolean distanceSpanws = this.verifySpawnsDistance(zoneConnexe);
@@ -304,20 +304,20 @@ public class Map
 		return spawnsConnexe && distanceSpanws && surfaceConnexeValide;
 	}
 
-	private List<Case> getZoneConnexe(Case spawn)
+	private List<Tile> getZoneConnexe(Tile spawn)
 	{
-		List<Case> zone = new ArrayList<>();
+		List<Tile> zone = new ArrayList<>();
 		
-		List<Case> aFaire = new ArrayList<>();
+		List<Tile> aFaire = new ArrayList<>();
 		
 		aFaire.add(spawn);
 		
 		while(aFaire.size() > 0)
 		{
-			Case act = aFaire.remove(0);
+			Tile act = aFaire.remove(0);
 			zone.add(act);
 			
-			for (Case adj : act.getAdjacent())
+			for (Tile adj : act.getAdjacent())
 			{
 				if (adj.getType().isStrongConnexity() && !zone.contains(adj) && !aFaire.contains(adj))
 				{
@@ -329,13 +329,13 @@ public class Map
 		return zone;
 	}
 
-	private boolean verifySpawnsConnexes(List<Case> zoneConnexe)
+	private boolean verifySpawnsConnexes(List<Tile> zoneConnexe)
 	{
 		int cpt = 0;
 		
-		for (Case act : zoneConnexe)
+		for (Tile act : zoneConnexe)
 		{
-			if (act.getType() == CaseType.KING)
+			if (act.getType() == TileType.GENERAL)
 			{
 				cpt++;
 			}
@@ -344,17 +344,17 @@ public class Map
 		return cpt == this.nbPlayers;
 	}
 
-	private boolean verifySpawnsDistance(List<Case> zoneConnexe)
+	private boolean verifySpawnsDistance(List<Tile> zoneConnexe)
 	{
-		for (Case spawn : this.spawns)
+		for (Tile spawn : this.spawns)
 		{
-			List<Case> zoneAround = this.getZoneAround(spawn, MINIMUM_SPAWN_DISTANCE + 1);
+			List<Tile> zoneAround = this.getZoneAround(spawn, MINIMUM_SPAWN_DISTANCE + 1);
 			
 			int cpt = 0;
 			
-			for (Case act : zoneAround)
+			for (Tile act : zoneAround)
 			{
-				if (act.getType() == CaseType.KING)
+				if (act.getType() == TileType.GENERAL)
 				{
 					cpt++;
 				}
@@ -369,11 +369,11 @@ public class Map
 		return true;
 	}
 	
-	private List<Case> getZoneAround(Case initial, int deepness)
+	private List<Tile> getZoneAround(Tile initial, int deepness)
 	{
-		List<Case> zone = new ArrayList<Case>();
-		List<Case> aFaire = new ArrayList<Case>();
-		List<Case> nextStep = new ArrayList<Case>();
+		List<Tile> zone = new ArrayList<Tile>();
+		List<Tile> aFaire = new ArrayList<Tile>();
+		List<Tile> nextStep = new ArrayList<Tile>();
 		
 		aFaire.add(initial);
 		
@@ -381,10 +381,10 @@ public class Map
 		{
 			while (aFaire.size() > 0)
 			{
-				Case act = aFaire.remove(0);
+				Tile act = aFaire.remove(0);
 				zone.add(act);
 				
-				for (Case adj : act.getAdjacent())
+				for (Tile adj : act.getAdjacent())
 				{
 					if (adj.getType().isWeakConnexity() && !zone.contains(adj) && !aFaire.contains(adj) && !nextStep.contains(adj))
 					{
@@ -400,7 +400,7 @@ public class Map
 		return zone;
 	}
 
-	private boolean verifySurfaceConnexe(List<Case> zoneConnexe)
+	private boolean verifySurfaceConnexe(List<Tile> zoneConnexe)
 	{
 		double tailleZoneConnexe = zoneConnexe.size();
 		double nbMountains = this.getMountainsAmount();
@@ -419,7 +419,7 @@ public class Map
 		{
 			for (int j = 0; j < this.height; j++)
 			{
-				if (this.map[i][j].getType() == CaseType.MOUNTAIN)
+				if (this.map[i][j].getType() == TileType.MOUNTAIN)
 				{
 					cpt++;
 				}
@@ -429,7 +429,7 @@ public class Map
 		return cpt;
 	}
 
-	public Case[][] getMap()
+	public Tile[][] getMap()
 	{
 		return this.map;
 	}

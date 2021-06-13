@@ -4,7 +4,7 @@ import org.newdawn.slick.Graphics;
 import org.newdawn.slick.SlickException;
 
 import map.Map;
-import map.cases.Case;
+import map.tiles.Tile;
 
 public class Renderer
 {
@@ -38,7 +38,7 @@ public class Renderer
 		{
 			for(int j = 0; j < map.getHeight(); j++)
 			{
-				Case maCase = map.getMap()[i][j];
+				Tile maCase = map.getMap()[i][j];
 				
 				g.setColor(maCase.getColor());
 
