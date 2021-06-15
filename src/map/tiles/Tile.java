@@ -1,13 +1,17 @@
 package map.tiles;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.newdawn.slick.Color;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SlickException;
 
-public class Tile
+public abstract class Tile
 {
 	private TileType type;
 	private Color col;
@@ -15,12 +19,11 @@ public class Tile
 	public final int x;
 	public final int y;
 	
+	private float score;
+	
 	private List<Tile> adjacent;
 	
-	public Tile(int x, int y)
-	{
-		this(TileType.BLANK, new Color(255, 255, 255), x, y);
-	}
+	private Map<General, Integer> distances;
 	
 	protected Tile(TileType type, Color color, int x, int y)
 	{
@@ -30,7 +33,11 @@ public class Tile
 		this.x = x;
 		this.y = y;
 		
+		this.score = 0;
+		
 		this.adjacent = new ArrayList<>();
+		
+		this.distances = new HashMap<>();
 	}
 
 	public String getName()
@@ -86,6 +93,38 @@ public class Tile
 	
 	public String toString()
 	{
-		return this.getName() + " : [" + this.x + ", " + this.y + "]";
+		return this.getName() + " : [" + this.x + ", " + this.y + "]: " + this.distances;
+	}
+
+	public void addScore(float value)
+	{
+		this.score += value;
+	}
+
+	public float getScore()
+	{
+		return this.score;
+	}
+
+	public General getConcerned()
+	{
+		General best = null;
+		int min = Integer.MAX_VALUE;
+		
+		for (Entry<General, Integer> pair : this.distances.entrySet())
+		{
+			if (pair.getValue() < min)
+			{
+				min = pair.getValue();
+				best = pair.getKey();
+			}
+		}
+		
+		return best;
+	}
+
+	public Map<General, Integer> getDistances()
+	{
+		return this.distances;
 	}
 }

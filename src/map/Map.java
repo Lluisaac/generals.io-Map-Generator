@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import map.tiles.Blank;
 import map.tiles.City;
 import map.tiles.General;
 import map.tiles.Mountain;
@@ -29,7 +30,7 @@ public class Map
 	private int width;
 	private int height;
 	
-	private List<Tile> spawns;
+	private List<General> spawns;
 
 	private Random rand;
 	
@@ -62,9 +63,126 @@ public class Map
 
 	public void reroll()
 	{
-		while (!this.generate());
+		do 
+		{
+			while (!this.generate());
+		}
+		while (!this.isFairPlay());
 	}
 	
+	private boolean isFairPlay()
+	{
+		this.scorePreProcessing();
+
+		this.scoreSpawns();
+		
+		return this.areSpawnsFair();
+	}
+
+	private void scorePreProcessing()
+	{
+		this.buildDistances();
+		this.calculateTileScore();
+	}
+
+	private void buildDistances()
+	{
+		for (General spawn : this.spawns)
+		{
+			List<Tile> toVisit = new ArrayList<>();
+			toVisit.add(spawn);
+			
+			this.propagateDistancesFrom(spawn, toVisit, 0);
+		}
+	}
+
+	private void propagateDistancesFrom(General spawn, List<Tile> toVisit, int distance)
+	{
+		while (!toVisit.isEmpty())
+		{
+			List<Tile> nextToVisit = new ArrayList<>();
+
+			for (Tile tile : toVisit)
+			{
+				if (!tile.getDistances().containsKey(spawn)) 
+				{
+					tile.getDistances().put(spawn, distance);
+					
+					for (Tile adjacent : tile.getAdjacent())
+					{
+						if (adjacent.getType().isStrongConnexity() && !adjacent.getDistances().containsKey(spawn))
+						{
+							nextToVisit.add(adjacent);
+						}
+					}
+				}
+			}
+			
+			toVisit.clear();
+			toVisit.addAll(nextToVisit);
+			distance++;
+		}
+	}
+
+	private void calculateTileScore()
+	{
+		for (int i = 0; i < this.width; i++)
+		{
+			for (int j = 0; j < this.height; j++)
+			{
+				if (this.map[i][j].getType() == TileType.CITY)
+				{
+					this.map[i][j].addScore(50);
+				}
+			}
+		}
+	}
+
+	private void scoreSpawns()
+	{
+		for (int i = 0; i < this.width; i++)
+		{
+			for (int j = 0; j < this.height; j++)
+			{
+				General concerned = this.map[i][j].getConcerned();
+				
+				if (concerned != null)
+				{
+					concerned.addTotalScore(this.map[i][j].getScore());
+				}
+			}
+		}
+	}
+
+	private boolean areSpawnsFair()
+	{
+		float[] scores = new float[this.spawns.size()];
+		
+		float min = Float.MAX_VALUE;
+		
+		for (int i = 0; i < this.spawns.size(); i++)
+		{
+			scores[i] = this.spawns.get(i).getTotalScore();
+			
+			if (scores[i] < min)
+			{
+				min = scores[i];
+			}
+		}
+		
+		System.out.println("Minimum score: " + min);
+		
+		for (int i = 0; i < this.spawns.size(); i++)
+		{
+			if (scores[i] > min * 1.1)
+			{
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
 	public Tile insert(int x, int y, Tile newCase)
 	{
 		Tile oldCase = this.map[x][y];
@@ -104,7 +222,7 @@ public class Map
 		this.width = this.width < 16 ? 16 : this.width;
 		this.height = this.height < 16 ? 16 : this.height;
 		
-		System.out.println("Width: " + this.width + "\nHeight: " + this.height);
+		System.out.println("\nWidth: " + this.width + "\nHeight: " + this.height);
 		
 		this.map = new Tile[this.width][this.height];
 		
@@ -152,7 +270,7 @@ public class Map
 		{
 			for(int j = 0; j < this.height; j++)
 			{
-				this.map[i][j] = new Tile(i, j);
+				this.map[i][j] = new Blank(i, j);
 			}
 		}
 	}
