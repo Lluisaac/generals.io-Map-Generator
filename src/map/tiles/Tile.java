@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.newdawn.slick.Color;
 import org.newdawn.slick.Image;
@@ -24,6 +23,9 @@ public abstract class Tile
 	private List<Tile> adjacent;
 	
 	private Map<General, Integer> distances;
+	
+	private Zone zone;
+	private General concerned;
 	
 	protected Tile(TileType type, Color color, int x, int y)
 	{
@@ -106,7 +108,14 @@ public abstract class Tile
 		return this.score;
 	}
 
-	public General getConcerned()
+	public void setupDistanceData()
+	{
+		this.setupConcerned();
+		this.setupZone();
+	}
+
+
+	private void setupConcerned()
 	{
 		General best = null;
 		int min = Integer.MAX_VALUE;
@@ -120,11 +129,81 @@ public abstract class Tile
 			}
 		}
 		
-		return best;
+		for (Entry<General, Integer> pair : this.distances.entrySet())
+		{
+			if (pair.getKey() != best && Math.abs(pair.getValue() - min) <= 1)
+			{
+				best = null;
+			}
+		}
+		
+		this.concerned = best;
+	}
+
+	private void setupZone()
+	{
+		int distanceToBorder = this.getDistanceToBorder();
+		
+		if (this.getConcerned() == null)
+		{
+			this.zone = Zone.BORDER;
+		}
+		else if (this.getDistanceToConcerned() <= 5)
+		{
+			this.zone = Zone.CLOSE;
+		}
+		else if (distanceToBorder / 2 <= 3)
+		{
+			this.zone = Zone.FAR;
+		}
+		else
+		{
+			this.zone = Zone.MID;
+		}
+	}
+	
+	public int getDistanceToBorder()
+	{
+		int min = Integer.MAX_VALUE;
+		
+		for (Entry<General, Integer> distance : this.getDistances().entrySet())
+		{
+			if (this.getConcerned() != null && !distance.getKey().equals(this.getConcerned()))
+			{
+				int distanceToBorder = Math.abs(this.getDistanceToConcerned() - distance.getValue());
+				
+				if (min > distanceToBorder)
+				{
+					min = distanceToBorder; 
+				}
+			}
+		}
+		
+		return min;
+	}
+
+	public int getDistanceToConcerned()
+	{
+		return this.getDistances().get(this.getConcerned());
+	}
+
+	public Zone getZone()
+	{
+		return this.zone;
+	}
+
+	public General getConcerned()
+	{
+		return this.concerned;
 	}
 
 	public Map<General, Integer> getDistances()
 	{
 		return this.distances;
+	}
+
+	public void buildScore()
+	{
+		
 	}
 }

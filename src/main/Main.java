@@ -31,7 +31,7 @@ public class Main extends BasicGame
 	@Override
 	public void init(GameContainer container) throws SlickException
 	{
-		this.map = new Map(2, 0.5, 0.5, 1, 1);
+		this.map = new Map(2, 0, 0, 0.5, 0.5);
 
 		container.getInput().addMouseListener(new MouseListener() {
 

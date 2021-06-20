@@ -82,9 +82,10 @@ public class Map
 	private void scorePreProcessing()
 	{
 		this.buildDistances();
+		this.setupTileDistanceData();
 		this.calculateTileScore();
 	}
-
+	
 	private void buildDistances()
 	{
 		for (General spawn : this.spawns)
@@ -124,15 +125,27 @@ public class Map
 		}
 	}
 
+	private void setupTileDistanceData()
+	{
+		for (int i = 0; i < this.width; i++)
+		{
+			for (int j = 0; j < this.height; j++)
+			{
+				this.map[i][j].setupDistanceData();
+			}
+		}
+	}
+
 	private void calculateTileScore()
 	{
 		for (int i = 0; i < this.width; i++)
 		{
 			for (int j = 0; j < this.height; j++)
 			{
-				if (this.map[i][j].getType() == TileType.CITY)
+				TileType type = this.map[i][j].getType();
+				if (type == TileType.CITY || type == TileType.BLANK || type == TileType.GENERAL)
 				{
-					this.map[i][j].addScore(50);
+					this.map[i][j].buildScore();
 				}
 			}
 		}

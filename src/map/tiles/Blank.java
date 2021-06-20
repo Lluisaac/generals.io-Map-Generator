@@ -2,7 +2,7 @@ package map.tiles;
 
 import org.newdawn.slick.Color;
 
-public class Blank extends Tile
+public class Blank extends DistanceScoredTile
 {	
 	public Blank(int x, int y)
 	{
